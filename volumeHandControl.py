@@ -3,6 +3,10 @@ import cv2
 import time
 import handtrakingmodule as htm
 import math
+from ctypes import cast, POINTER
+from comtypes import CLSCTX_ALL
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+
 
 wCam, hCam = 640, 480
 
@@ -13,6 +17,23 @@ cap.set(4, hCam)
 pTime = 0
 
 detector = htm.handDetector(detectionCon=0.7)
+
+devices = AudioUtilities.GetSpeakers()
+interface = devices.Activate(
+    IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+volume = cast(interface, POINTER(IAudioEndpointVolume))
+# volume.GetMute()
+# volume.GetMasterVolumeLevel()
+# print(volume.GetVolumeRange())
+volRang = volume.GetVolumeRange()
+# volume.SetMasterVolumeLevel(-20.0, None)
+
+minVol = volRang[0]
+maxVol = volRang[1]
+
+vol = 0
+volBar = 400
+volParc = 0
 
 while True:
     success, img = cap.read()
@@ -33,11 +54,26 @@ while True:
         cv2.circle(img, (cx, cy), 10, (255, 0, 255), cv2.FILLED)
 
         length = math.hypot(x2 - x1, y2 - y1)
-        print(length)
+        # print(length)
+
+        # hand range 50 - 300
+        # volume range -65 - 0
+
+        vol = np.interp(length, [50, 300], [minVol, maxVol])
+        volBar = np.interp(length, [50, 300], [400, 150])
+        volParc = np.interp(length, [50, 300], [0, 100])
+        volume.SetMasterVolumeLevel(vol, None)
+        # print(int(length), vol)
 
         if length < 50:
             cv2.circle(img, (cx, cy), 10, (0, 255, 0), cv2.FILLED)
-        
+
+        cv2.rectangle(img, (50, 150), (85, 400), (255, 0, 0), 3)
+        cv2.rectangle(img, (50, int(volBar)), (85, 400),
+                        (255, 0, 0), cv2.FILLED)
+        cv2.putText(img, f'{int(volParc)} %', (40, 450),
+                    cv2.FONT_HERSHEY_COMPLEX, 1, (255, 0, 0), 3)
+
     cTime = time.time()
     fps = 1/(cTime-pTime)
     pTime = cTime
