@@ -58,15 +58,15 @@ while True:
 
             # Convert volume
             # vol = np.interp(length, [50, 300], [minVol, maxVol])
-            volBar = np.interp(length, [50, 300], [400, 150])
-            volParc = np.interp(length, [50, 300], [0, 100])
+            volBar = np.interp(length, [50, 280], [400, 150])
+            volParc = np.interp(length, [50, 280], [0, 100])
             # volume.SetMasterVolumeLevel(vol, None)
             # set smoothness
             smoothness = 10
             volParc = smoothness * round(volParc/smoothness)
             # check fingers up
             fingers = detector.fingersUp()
-            print(fingers)
+            # print(fingers)
             
             if not fingers[4]:
                 volume.SetMasterVolumeLevelScalar(volParc/100,None)
@@ -79,10 +79,13 @@ while True:
             # if length < 50:
             #     cv2.circle(img, (lineInfo[4], lineInfo[5]), 10, (0, 255, 0), cv2.FILLED)
 
-        cv2.rectangle(img, (50, 150), (85, 400), (255, 0, 0), 3)
-        cv2.rectangle(img, (50, int(volBar)), (85, 400),
+    cv2.rectangle(img, (50, 150), (85, 400), (255, 0, 0), 3)
+    cv2.rectangle(img, (50, int(volBar)), (85, 400),
                         (255, 0, 0), cv2.FILLED)
-        cv2.putText(img, f'{int(volParc)} %', (40, 450),
+    cv2.putText(img, f'{int(volParc)} %', (40, 450),
+                    cv2.FONT_HERSHEY_COMPLEX, 1, (255, 0, 0), 3)
+    cVol = int(volume.GetMasterVolumeLevelScalar() * 100)
+    cv2.putText(img, f'Vol set: {int(cVol)} %', (400, 50),
                     cv2.FONT_HERSHEY_COMPLEX, 1, (255, 0, 0), 3)
 
     cTime = time.time()
